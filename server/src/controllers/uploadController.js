@@ -2,10 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dataStore } from '../utils/dataStore.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
+import { UPLOADS_DIR, BUNDLED_UPLOADS_DIR, TMP_UPLOADS_DIR } from '../middleware/uploadMiddleware.js';
 
 export const uploadProfileImage = async (req, res, next) => {
   try {
@@ -95,12 +92,19 @@ export const uploadCVFile = async (req, res, next) => {
 
     // Safely remove previous CV file if it exists
     if (settings.cvFile && settings.cvFile.filename) {
-      const oldPath = path.join(UPLOADS_DIR, 'cv', settings.cvFile.filename);
-      if (fs.existsSync(oldPath)) {
-        try {
-          fs.unlinkSync(oldPath);
-        } catch (e) {
-          console.warn('[UploadCV] Failed to remove old CV file:', e.message);
+      const candidates = [
+        path.join(UPLOADS_DIR, 'cv', settings.cvFile.filename),
+        path.join(TMP_UPLOADS_DIR, 'cv', settings.cvFile.filename),
+        path.join(BUNDLED_UPLOADS_DIR, 'cv', settings.cvFile.filename),
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) {
+          try {
+            fs.unlinkSync(p);
+            break;
+          } catch (e) {
+            console.warn('[UploadCV] Failed to remove old CV file:', e.message);
+          }
         }
       }
     }
@@ -139,12 +143,19 @@ export const deleteCVFile = async (req, res, next) => {
       });
     }
 
-    const filePath = path.join(UPLOADS_DIR, 'cv', settings.cvFile.filename);
-    if (fs.existsSync(filePath)) {
-      try {
-        fs.unlinkSync(filePath);
-      } catch (e) {
-        console.warn('[DeleteCV] Failed to unlink file:', e.message);
+    const candidates = [
+      path.join(UPLOADS_DIR, 'cv', settings.cvFile.filename),
+      path.join(TMP_UPLOADS_DIR, 'cv', settings.cvFile.filename),
+      path.join(BUNDLED_UPLOADS_DIR, 'cv', settings.cvFile.filename),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        try {
+          fs.unlinkSync(p);
+          break;
+        } catch (e) {
+          console.warn('[DeleteCV] Failed to unlink file:', e.message);
+        }
       }
     }
 

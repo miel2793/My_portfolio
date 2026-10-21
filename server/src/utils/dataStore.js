@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import { getIsConnected } from '../config/db.js';
@@ -17,6 +18,8 @@ import { SiteSettings } from '../models/SiteSettings.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.resolve(__dirname, '../../data/local_db.json');
+const TMP_DB_FILE = path.join(os.tmpdir(), 'local_db.json');
+let activeDbFile = DB_FILE;
 
 const models = {
   admin: Admin,
@@ -45,6 +48,12 @@ let localDb = {
 // Load from file if exists
 const loadLocalDb = () => {
   try {
+    if (fs.existsSync(TMP_DB_FILE)) {
+      const raw = fs.readFileSync(TMP_DB_FILE, 'utf-8');
+      localDb = JSON.parse(raw);
+      activeDbFile = TMP_DB_FILE;
+      return;
+    }
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
       localDb = JSON.parse(raw);
@@ -56,9 +65,18 @@ const loadLocalDb = () => {
 
 const saveLocalDb = () => {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(localDb, null, 2), 'utf-8');
+    fs.writeFileSync(activeDbFile, JSON.stringify(localDb, null, 2), 'utf-8');
   } catch (err) {
-    console.error('[DataStore] Error saving local_db.json:', err.message);
+    if (activeDbFile !== TMP_DB_FILE) {
+      try {
+        activeDbFile = TMP_DB_FILE;
+        fs.writeFileSync(activeDbFile, JSON.stringify(localDb, null, 2), 'utf-8');
+      } catch (tmpErr) {
+        console.warn('[DataStore] Warning: could not write local DB cache to /tmp:', tmpErr.message);
+      }
+    } else {
+      console.warn('[DataStore] Warning: could not save local DB:', err.message);
+    }
   }
 };
 

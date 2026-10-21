@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 
 import { sanitizeInput } from './middleware/sanitize.js';
@@ -69,7 +70,12 @@ app.use(sanitizeInput);
 // Global Rate Limiting for /api
 app.use('/api', apiLimiter);
 
-// Static uploads directory
+// Static uploads directory:
+// 1. Dynamic / temporary uploads (for serverless environments like Vercel /tmp)
+const tmpUploadsDir = path.join(os.tmpdir(), 'uploads');
+app.use('/uploads', express.static(tmpUploadsDir));
+
+// 2. Bundled uploads directory (for static assets shipped with repository)
 const uploadsDir = path.resolve(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsDir));
 
