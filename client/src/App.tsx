@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
@@ -35,7 +35,7 @@ export const App: React.FC = () => {
     <ThemeProvider>
       <AuthProvider>
         <PublicDataProvider>
-          <BrowserRouter>
+          <HashRouter>
             <Routes>
               {/* Public Website Routes */}
               <Route element={<PublicLayout />}>
@@ -65,7 +65,7 @@ export const App: React.FC = () => {
                 <Route path="security" element={<AdminSecurityPage />} />
               </Route>
             </Routes>
-          </BrowserRouter>
+          </HashRouter>
         </PublicDataProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -11,7 +11,7 @@ import {
   DashboardStats,
 } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_BASE ?? '/api').replace(/\/$/, '');
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const config: RequestInit = {
